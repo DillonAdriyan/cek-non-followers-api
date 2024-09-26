@@ -1,4 +1,3 @@
 django
-django-rest
-json
+djangorestframework
 django-cors-headers
