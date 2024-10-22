@@ -3,7 +3,70 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser
 from rest_framework import status
+import requests
+from rest_framework.permissions import IsAuthenticated
+from django.conf import settings
 
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from .models import UserLocation
+
+@csrf_exempt  # Nonaktifkan CSRF untuk permintaan POST ini
+def save_location(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            latitude = data.get('latitude')
+            longitude = data.get('longitude')
+            
+            # Simpan lokasi ke database
+            UserLocation.objects.create(latitude=latitude, longitude=longitude)
+            
+            return JsonResponse({'status': 'success'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    
+    return JsonResponse({'status': 'failed'}, status=400)
+
+
+
+
+class FacebookProfileView(APIView):
+    def get(self, request, *args, **kwargs):
+        access_token = settings.INSTAGRAM_ACCESS_TOKEN  # Your Facebook token with public_profile scope
+
+        url = "https://graph.facebook.com/me"
+        params = {
+            'fields': 'id,name,picture',  # Requesting basic fields
+            'access_token': access_token
+        }
+        response = requests.get(url, params=params)
+
+        if response.status_code == 200:
+            data = response.json()
+            return Response(data)
+        else:
+            return Response({'error': 'Failed to retrieve data', 'details': response.json()}, status=response.status_code)
+            
+class InstagramDataView(APIView):
+    permission_classes = [IsAuthenticated]  # Sesuaikan izin jika perlu
+  
+    def get(self, request, *args, **kwargs):
+        access_token = settings.INSTAGRAM_ACCESS_TOKEN
+
+        url = "https://graph.instagram.com/me"
+        params = {
+            'fields': 'id,username,followers_count,follows_count',
+            'access_token': access_token
+        }
+        response = requests.get(url, params=params)
+        print(response.status_code)
+        print(response.text)  # Menampilkan respons dari API Instagram
+        if response.status_code == 200:
+            data = response.json()
+            return Response(data)
+        else:
+            return Response({'error': 'Failed to retrieve data'}, status=400)
 # Fungsi untuk ekstraksi username followers
 def extract_usernames_followers(followers_file):
     try:
