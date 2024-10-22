@@ -4,7 +4,7 @@ from .views import CheckFollowersAPIView, InstagramDataView, FacebookProfileView
 from .views import save_location
 
 urlpatterns = [
-    path('save-location/', save_location, name='save_location'),
+    path('api/save-location/', save_location, name='save_location'),
     path('api/check-followers/', CheckFollowersAPIView.as_view(), name='check-followers'),
     path('api/instagram-data/', InstagramDataView.as_view(), name='instagram-data'),
     path('api/facebook-data/', FacebookProfileView.as_view(), name='facebook-data'),
